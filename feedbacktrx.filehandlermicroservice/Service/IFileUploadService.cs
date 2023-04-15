@@ -4,6 +4,6 @@ namespace feedbacktrx.filehandlermicroservice.Service
 {
     public interface IFileUploadService
     {
-        public Task SaveFile(IFormFile file);
+        public Task<Guid> SaveFile(IFormFile file);
     }
 }

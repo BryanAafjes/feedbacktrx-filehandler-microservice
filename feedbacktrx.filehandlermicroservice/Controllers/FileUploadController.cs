@@ -19,7 +19,7 @@ namespace feedbacktrx.filehandlermicroservice.Controllers
         [RequestSizeLimit(int.MaxValue)]
         public async Task<ActionResult> Upload(IFormFile file)
         {
-            await _service.SaveFile(file);
+            Guid fileGuid = await _service.SaveFile(file);
             return StatusCode(StatusCodes.Status201Created);
         }
     }

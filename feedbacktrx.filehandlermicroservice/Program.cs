@@ -1,3 +1,4 @@
+using feedbacktrx.filehandlermicroservice.Exceptions;
 using feedbacktrx.filehandlermicroservice.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,9 @@ builder.Services.AddScoped<IFileUploadService, FileUploadService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Create folder for fileuploads
+FileUploadDirectory.Create();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -33,10 +37,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("_myAllowSpecificOrigins");
+
+app.UseMiddleware<ExceptionHandler>();
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
