@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using feedbacktrx.filehandlermicroservice.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace feedbacktrx.filehandlermicroservice.Service
 {
@@ -6,6 +7,11 @@ namespace feedbacktrx.filehandlermicroservice.Service
     {
         public async Task<Guid> SaveFile(IFormFile file)
         {
+            if (file == null)
+            {
+                throw new FileNullException();
+            }
+
             Guid guid = Guid.NewGuid();
             string fileName = guid.ToString() + Path.GetExtension(file.FileName);
 

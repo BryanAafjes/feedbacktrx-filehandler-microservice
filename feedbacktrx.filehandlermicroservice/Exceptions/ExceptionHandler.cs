@@ -31,13 +31,14 @@ namespace feedbacktrx.filehandlermicroservice.Exceptions
 
             switch (ex)
             {
-                //case NotFoundException _:
-                //    response.StatusCode = (int)HttpStatusCode.NotFound;
-                //    break;
+                case FileNullException _:
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await response.WriteAsync("Bad request error");
+                    break;
 
                 default:
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    await response.WriteAsync("An error occurred while processing your request.");
+                    await response.WriteAsync("An error occurred while processing your request");
                     break;
             }
         }
