@@ -36,6 +36,11 @@ namespace feedbacktrx.filehandlermicroservice.Exceptions
                     await response.WriteAsync("Bad request error");
                     break;
 
+                case FileNotFoundException _:
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                    await response.WriteAsync("File not found!");
+                    break;
+
                 default:
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     await response.WriteAsync("An error occurred while processing your request");

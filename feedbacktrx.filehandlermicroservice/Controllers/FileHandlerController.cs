@@ -1,16 +1,17 @@
 ﻿using feedbacktrx.filehandlermicroservice.Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
 
 namespace feedbacktrx.filehandlermicroservice.Controllers
 {
-    [Route("api/upload")]
+    [Route("")]
     [ApiController]
-    public class FileUploadController : ControllerBase
+    public class FileHandlerController : ControllerBase
     {
-        private readonly IFileUploadService _service;
+        private readonly IFileHandlerService _service;
 
-        public FileUploadController(IFileUploadService service)
+        public FileHandlerController(IFileHandlerService service)
         {
             _service = service;
         }
@@ -21,6 +22,15 @@ namespace feedbacktrx.filehandlermicroservice.Controllers
         {
             Guid fileGuid = await _service.SaveFile(file);
             return StatusCode(StatusCodes.Status201Created);
+        }
+
+        [HttpGet("{fileName}")]
+        public async Task<IActionResult> StreamAudio(string fileName)
+        {
+            var audioStream = await _service.GetFileStream(fileName);
+            var mimeType = _service.GetMimeType(fileName);
+
+            return File(audioStream, mimeType);
         }
     }
 }
