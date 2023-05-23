@@ -25,9 +25,9 @@ namespace feedbacktrx.filehandlermicroservice.Controllers
         }
 
         [HttpGet("{fileName}")]
-        public async Task<IActionResult> StreamAudio(string fileName)
+        public IActionResult StreamAudio(string fileName)
         {
-            var audioStream = await _service.GetFileStream(fileName);
+            var audioStream = _service.GetFileStream(fileName);
             var mimeType = _service.GetMimeType(fileName);
 
             return File(audioStream, mimeType);

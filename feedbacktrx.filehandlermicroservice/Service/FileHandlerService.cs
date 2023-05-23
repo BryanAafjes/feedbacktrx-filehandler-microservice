@@ -29,7 +29,7 @@ namespace feedbacktrx.filehandlermicroservice.Service
         }
 
 
-        public async Task<Stream> GetFileStream(string fileName)
+        public Stream GetFileStream(string fileName)
         {
             var audioFilePath = Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -42,10 +42,7 @@ namespace feedbacktrx.filehandlermicroservice.Service
                 throw new Exceptions.FileNotFoundException();
             }
 
-            var fileStream = new FileStream(audioFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true);
-            fileStream.Seek(0, SeekOrigin.Begin);
-
-            return fileStream;
+            return new FileStream(audioFilePath, FileMode.Open, FileAccess.Read);
         }
 
         public string GetMimeType(string fileName)
