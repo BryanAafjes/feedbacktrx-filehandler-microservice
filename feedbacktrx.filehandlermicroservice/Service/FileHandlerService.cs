@@ -5,7 +5,7 @@ namespace feedbacktrx.filehandlermicroservice.Service
 {
     public class FileHandlerService : IFileHandlerService
     {
-        public async Task<Guid> SaveFile(IFormFile file)
+        public async Task<string> SaveFile(IFormFile file)
         {
             if (file == null)
             {
@@ -26,7 +26,7 @@ namespace feedbacktrx.filehandlermicroservice.Service
                 await file.CopyToAsync(stream);
             }
 
-            return guid;
+            return fileName;
         }
 
 
