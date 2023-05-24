@@ -1,4 +1,5 @@
 ﻿using feedbacktrx.filehandlermicroservice.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace feedbacktrx.filehandlermicroservice.Service
 {
@@ -29,7 +30,7 @@ namespace feedbacktrx.filehandlermicroservice.Service
         }
 
 
-        public Stream GetFileStream(string fileName)
+        public async Task<FileStreamResult> GetFileStream(string fileName)
         {
             var audioFilePath = Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -42,7 +43,13 @@ namespace feedbacktrx.filehandlermicroservice.Service
                 throw new Exceptions.FileNotFoundException();
             }
 
-            return new FileStream(audioFilePath, FileMode.Open, FileAccess.Read);
+            FileStream fileStream = new(audioFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            FileStreamResult result = new(fileStream, GetMimeType(fileName))
+            {
+                EnableRangeProcessing = true
+            };
+
+            return await Task.FromResult(result);
         }
 
         public string GetMimeType(string fileName)
