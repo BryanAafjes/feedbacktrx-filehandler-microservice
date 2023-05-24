@@ -30,6 +30,8 @@ namespace feedbacktrx.filehandlermicroservice.Controllers
             var audioStream = _service.GetFileStream(fileName);
             var mimeType = _service.GetMimeType(fileName);
 
+            HttpContext.Response.Headers.Add("Accept-Ranges", "bytes");
+
             return File(audioStream, mimeType);
         }
     }
