@@ -51,3 +51,34 @@ jobs:
           file: feedbacktrx.filehandlermicroservice/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/feedbacktrx-filehandlermicroservice:latest
+
+  deploy:
+    needs: build-docker-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout code
+
+      - name: Generate kube configuration
+        run: |
+          mkdir ~/.kube
+          touch ~/.kube/config
+          echo "${{ secrets.KUBE_CONF }}" >> ~/.kube/config
+
+      # CHANGE THIS TO ADD SECRETS FOR BLOBSTORAGE
+      # - name: Create secrets
+      #   run: |
+      #     kubectl delete configmap env-configmap --ignore-not-found
+      #     kubectl create configmap env-configmap --from-literal=env.js=${{ secrets.ENV_JS}}
+
+      - name: Deploy ClamAV
+        run: kubectl apply -f feedbacktrx.filehandlermicroservice/kubernetes/clamav.yaml
+
+      - name: Deploy application
+        run: kubectl apply -f feedbacktrx.filehandlermicroservice/kubernetes/deployment.yaml
+
+      - name: Restart deployment ClamAV
+        run: kubectl rollout restart deploy clamav
+
+      - name: Restart deployment File Handler
+        run: kubectl rollout restart deploy filemicroservice-app
