@@ -41,6 +41,21 @@ namespace feedbacktrx.filehandlermicroservice.Exceptions
                     await response.WriteAsync("File not found!");
                     break;
 
+                case FileNotCleanException _:
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await response.WriteAsync("File not clean!");
+                    break;
+
+                case FileNameTooLongException _:
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await response.WriteAsync("File name is too long!");
+                    break;
+
+                case WrongFileExtensionException _:
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await response.WriteAsync("File extension is not allowed!");
+                    break;
+
                 default:
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     await response.WriteAsync("An error occurred while processing your request");

@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Inject Services
+builder.Services.AddSingleton<IClamAVService>(_ => new ClamAVService(builder.Configuration["ClamAVConfig:Host"], int.Parse(builder.Configuration["ClamAVConfig:Port"])));
 builder.Services.AddScoped<IFileHandlerService, FileHandlerService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

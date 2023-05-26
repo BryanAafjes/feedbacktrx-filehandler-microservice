@@ -17,7 +17,7 @@ namespace feedbacktrx.filehandlermicroservice.Controllers
         }
 
         [HttpPost]
-        [RequestSizeLimit(int.MaxValue)]
+        [RequestSizeLimit(52428800)]
         public async Task<ActionResult> Upload(IFormFile file)
         {
             string fileName = await _service.SaveFile(file);

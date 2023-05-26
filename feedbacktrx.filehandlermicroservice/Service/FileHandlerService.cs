@@ -1,16 +1,22 @@
 ﻿using feedbacktrx.filehandlermicroservice.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using nClam;
+using System.IO;
 
 namespace feedbacktrx.filehandlermicroservice.Service
 {
     public class FileHandlerService : IFileHandlerService
     {
+        private IClamAVService _clamAVService;
+
+        public FileHandlerService(IClamAVService clamAVService) 
+        {
+            _clamAVService = clamAVService;
+        }
+
         public async Task<string> SaveFile(IFormFile file)
         {
-            if (file == null)
-            {
-                throw new FileNullException();
-            }
+            ValidateFile(file, new string[] { ".wav", ".mp3" });
 
             Guid guid = Guid.NewGuid();
             string fileName = guid.ToString() + Path.GetExtension(file.FileName);
@@ -23,6 +29,13 @@ namespace feedbacktrx.filehandlermicroservice.Service
 
             using (Stream stream = new FileStream(path, FileMode.Create))
             {
+                var scanResult = await _clamAVService.ScanFileAsync(stream);
+
+                if (!scanResult.Result.Equals(ClamScanResults.Clean))
+                {
+                    throw new FileNotCleanException("File is not clean!");
+                }
+
                 await file.CopyToAsync(stream);
             }
 
@@ -66,5 +79,29 @@ namespace feedbacktrx.filehandlermicroservice.Service
                     return "application/octet-stream";
             }
         }
+        private static void ValidateFile(IFormFile file, string[] fileTypes)
+        {
+            if (file == null || file.Length == 0)
+            {
+                throw new FileNullException("A file hasn't been selected!");
+            }
+
+            var uploadedFileName = Path.GetFileName(file.FileName);
+            var fileNameLength = uploadedFileName.Length;
+
+            if (fileNameLength > 100)
+            {
+                throw new FileNameTooLongException("File name is too long!");
+            }
+
+            var allowedextensions = fileTypes;
+            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+            if (!allowedextensions.Contains(fileExtension))
+            {
+                throw new WrongFileExtensionException("Only " + string.Join(", ", allowedextensions));
+            }
+        }
+
     }
 }

@@ -1,0 +1,49 @@
+﻿apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: clamav-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clamav
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clamav
+  template:
+    metadata:
+      labels:
+        app: clamav
+    spec:
+      containers:
+        - name: clamav
+          image: clamav/clamav:latest
+          ports:
+            - containerPort: 3310
+          volumeMounts:
+            - name: clamav-data
+              mountPath: /var/lib/clamav
+      volumes:
+        - name: clamav-data
+          persistentVolumeClaim:
+            claimName: clamav-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clamav-service
+spec:
+  selector:
+    app: clamav
+  ports:
+    - protocol: TCP
+      port: 3310
+      targetPort: 3310
