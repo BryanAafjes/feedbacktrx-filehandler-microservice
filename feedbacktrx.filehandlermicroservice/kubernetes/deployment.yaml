@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: filemicroservice-app
-          image: bryanaafjes/feedbacktrx-filemicroservice:latest
+          image: bryanaafjes/feedbacktrx-filehandlermicroservice:latest
           ports:
             - containerPort: 80
 ---
