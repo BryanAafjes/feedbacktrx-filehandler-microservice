@@ -1,4 +1,6 @@
-﻿using Azure.Storage.Blobs;
+﻿using Azure;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using feedbacktrx.filehandlermicroservice.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using nClam;
@@ -66,13 +68,10 @@ namespace feedbacktrx.filehandlermicroservice.Service
                 throw new Exceptions.FileNotFoundException();
             }
 
-            MemoryStream memoryStream = new MemoryStream();
-            await blobClient.DownloadToAsync(memoryStream);
-            memoryStream.Seek(0, SeekOrigin.Begin);
+            Stream stream = await blobClient.OpenReadAsync();
 
-            FileStreamResult result = new FileStreamResult(memoryStream, GetMimeType(fileName))
+            FileStreamResult result = new FileStreamResult(stream, GetMimeType(fileName))
             {
-                FileDownloadName = fileName,
                 EnableRangeProcessing = true
             };
 
