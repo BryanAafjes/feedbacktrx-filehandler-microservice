@@ -31,7 +31,7 @@ namespace feedbacktrx.filehandlermicroservice.Service
             {
                 var scanResult = await _clamAVService.ScanFileAsync(stream);
 
-                if (!scanResult.Result.Equals(ClamScanResults.Clean))
+                if (!scanResult.Equals(ClamScanResults.Clean))
                 {
                     throw new FileNotCleanException("File is not clean!");
                 }
