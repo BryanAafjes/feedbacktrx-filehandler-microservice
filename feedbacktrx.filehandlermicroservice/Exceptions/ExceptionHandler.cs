@@ -59,6 +59,7 @@ namespace feedbacktrx.filehandlermicroservice.Exceptions
                 default:
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     await response.WriteAsync("An error occurred while processing your request");
+                    await response.WriteAsync(ex.ToString());
                     break;
             }
         }
