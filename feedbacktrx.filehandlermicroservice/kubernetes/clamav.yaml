@@ -27,7 +27,7 @@ spec:
         - name: clamav
           image: clamav/clamav:latest
           ports:
-            - containerPort: 80
+            - containerPort: 3310
           volumeMounts:
             - name: clamav-data
               mountPath: /var/lib/clamav
@@ -44,4 +44,4 @@ spec:
   selector:
     app: clamav
   ports:
-    - port: 80
+    - port: 3310
