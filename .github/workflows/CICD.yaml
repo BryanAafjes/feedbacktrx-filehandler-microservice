@@ -65,11 +65,10 @@ jobs:
           touch ~/.kube/config
           echo "${{ secrets.KUBE_CONF }}" >> ~/.kube/config
 
-      # CHANGE THIS TO ADD SECRETS FOR BLOBSTORAGE
-      # - name: Create secrets
-      #   run: |
-      #     kubectl delete configmap env-configmap --ignore-not-found
-      #     kubectl create configmap env-configmap --from-literal=env.js=${{ secrets.ENV_JS}}
+      - name: Create secrets
+        run: |
+          kubectl delete secret fileservice-env-secret --ignore-not-found
+          kubectl create secret generic fileservice-env-secret --from-literal=ConnectionString=${{ secrets.BLOB_CONTAINER_CONNECTION_STRING }} --from-literal=ContainerName=${{ secrets.BLOB_CONTAINER_NAME }}
 
       - name: Deploy ClamAV
         run: kubectl apply -f feedbacktrx.filehandlermicroservice/kubernetes/clamav.yaml
