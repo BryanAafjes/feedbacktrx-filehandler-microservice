@@ -56,10 +56,10 @@ namespace feedbacktrx.filehandlermicroservice.Exceptions
                     await response.WriteAsync("File extension is not allowed!");
                     break;
 
-                //default:
-                //    response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                //    await response.WriteAsync("An error occurred while processing your request");
-                //    break;
+                default:
+                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    await response.WriteAsync("An error occurred while processing your request");
+                    break;
             }
         }
     }
