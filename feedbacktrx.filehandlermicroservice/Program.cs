@@ -14,9 +14,6 @@ builder.Services.AddScoped<IFileHandlerService, FileHandlerService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Create folder for fileuploads
-FileUploadDirectory.Create();
-
 // Configure CORS
 builder.Services.AddCors(options =>
 {

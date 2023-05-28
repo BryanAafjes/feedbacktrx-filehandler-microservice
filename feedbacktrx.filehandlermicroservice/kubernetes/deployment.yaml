@@ -17,6 +17,17 @@ spec:
           image: bryanaafjes/feedbacktrx-filehandlermicroservice:latest
           ports:
             - containerPort: 80
+          env:
+            - name: AzureBlobStorage__ConnectionString
+              valueFrom:
+                secretKeyRef:
+                  name: fileservice-env-secret
+                  key: ConnectionString
+            - name: AzureBlobStorage__ContainerName
+              valueFrom:
+                secretKeyRef:
+                  name: fileservice-env-secret
+                  key: ContainerName
 ---
 apiVersion: v1
 kind: Service

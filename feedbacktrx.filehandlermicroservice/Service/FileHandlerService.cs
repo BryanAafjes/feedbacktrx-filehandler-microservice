@@ -1,6 +1,10 @@
-﻿using feedbacktrx.filehandlermicroservice.Exceptions;
+﻿using Azure;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using feedbacktrx.filehandlermicroservice.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using nClam;
+using System.ComponentModel;
 using System.IO;
 
 namespace feedbacktrx.filehandlermicroservice.Service
@@ -8,10 +12,12 @@ namespace feedbacktrx.filehandlermicroservice.Service
     public class FileHandlerService : IFileHandlerService
     {
         private IClamAVService _clamAVService;
+        private IConfiguration _configuration;
 
-        public FileHandlerService(IClamAVService clamAVService) 
+        public FileHandlerService(IClamAVService clamAVService, IConfiguration configuration) 
         {
             _clamAVService = clamAVService;
+            _configuration = configuration;
         }
 
         public async Task<string> SaveFile(IFormFile file)
@@ -21,13 +27,7 @@ namespace feedbacktrx.filehandlermicroservice.Service
             Guid guid = Guid.NewGuid();
             string fileName = guid.ToString() + Path.GetExtension(file.FileName);
 
-            string path = Path.Combine(
-                Directory.GetCurrentDirectory(), 
-                FileUploadDirectory.directoryName, 
-                fileName
-            );
-
-            using (Stream stream = new FileStream(path, FileMode.Create))
+            using (Stream stream = file.OpenReadStream())
             {
                 var scanResult = await _clamAVService.ScanFileAsync(stream);
 
@@ -36,7 +36,17 @@ namespace feedbacktrx.filehandlermicroservice.Service
                     throw new FileNotCleanException("File is not clean!");
                 }
 
-                await file.CopyToAsync(stream);
+                string connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+                string containerName = _configuration["AzureBlobStorage:ContainerName"];
+                BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                
+                await containerClient.CreateIfNotExistsAsync();
+
+                BlobClient blobClient = containerClient.GetBlobClient(fileName);
+                stream.Position = 0;
+
+                await blobClient.UploadAsync(stream, overwrite: true);
             }
 
             return fileName;
@@ -45,24 +55,27 @@ namespace feedbacktrx.filehandlermicroservice.Service
 
         public async Task<FileStreamResult> GetFileStream(string fileName)
         {
-            var audioFilePath = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                FileUploadDirectory.directoryName,
-                fileName
-            );
+            string connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+            string containerName = _configuration["AzureBlobStorage:ContainerName"];
 
-            if (!File.Exists(audioFilePath))
+            BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+            BlobClient blobClient = containerClient.GetBlobClient(fileName);
+
+            if (!await blobClient.ExistsAsync())
             {
                 throw new Exceptions.FileNotFoundException();
             }
 
-            FileStream fileStream = new(audioFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
-            FileStreamResult result = new(fileStream, GetMimeType(fileName))
+            Stream stream = await blobClient.OpenReadAsync();
+
+            FileStreamResult result = new FileStreamResult(stream, GetMimeType(fileName))
             {
                 EnableRangeProcessing = true
             };
 
-            return await Task.FromResult(result);
+            return result;
         }
 
         public string GetMimeType(string fileName)
