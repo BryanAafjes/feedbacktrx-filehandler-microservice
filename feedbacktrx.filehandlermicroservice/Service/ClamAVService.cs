@@ -25,7 +25,7 @@ namespace feedbacktrx.filehandlermicroservice.Service
 
         public async Task<ClamScanResult> ScanFileAsync(Stream fileStream)
         {
-            using (var tcpClient = new TcpClient(AddressFamily.InterNetworkV6))
+            using (var tcpClient = new TcpClient())
             {
                 await tcpClient.ConnectAsync(_clamAVHost, _clamAVPort);
 
