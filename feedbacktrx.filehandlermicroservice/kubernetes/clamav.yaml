@@ -41,7 +41,7 @@ kind: Service
 metadata:
   name: clamav-service
 spec:
-  clusterIP: 10.10.255.194
+  clusterIP: 10.0.0.133
   ports:
   - name: tcp-clamav
     port: 3310
