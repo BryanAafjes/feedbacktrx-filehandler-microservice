@@ -41,7 +41,12 @@ kind: Service
 metadata:
   name: clamav-service
 spec:
+  clusterIP: 10.10.255.194
+  ports:
+  - name: tcp-clamav
+    port: 3310
+    targetPort: 3310
   selector:
     app: clamav
-  ports:
-    - port: 3310
+  sessionAffinity: None
+  type: ClusterIP
