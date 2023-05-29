@@ -13,15 +13,18 @@ namespace feedbacktrx.filehandlermicroservice.Service
     {
         private IClamAVService _clamAVService;
         private IConfiguration _configuration;
+        private ILogger _logger;
 
-        public FileHandlerService(IClamAVService clamAVService, IConfiguration configuration) 
+        public FileHandlerService(IClamAVService clamAVService, IConfiguration configuration, ILogger logger) 
         {
             _clamAVService = clamAVService;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<string> SaveFile(IFormFile file)
         {
+            _logger.LogInformation("TEST IF IT EVEN REACHES HERE");
             ValidateFile(file, new string[] { ".wav", ".mp3" });
 
             Guid guid = Guid.NewGuid();
