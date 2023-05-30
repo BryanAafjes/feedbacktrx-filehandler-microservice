@@ -1,7 +1,5 @@
 ﻿using feedbacktrx.filehandlermicroservice.Service;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
 
 namespace feedbacktrx.filehandlermicroservice.Controllers
 {

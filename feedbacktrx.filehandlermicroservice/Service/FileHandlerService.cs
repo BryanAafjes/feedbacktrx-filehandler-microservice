@@ -4,8 +4,6 @@ using Azure.Storage.Blobs.Models;
 using feedbacktrx.filehandlermicroservice.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using nClam;
-using System.ComponentModel;
-using System.IO;
 
 namespace feedbacktrx.filehandlermicroservice.Service
 {
@@ -13,18 +11,15 @@ namespace feedbacktrx.filehandlermicroservice.Service
     {
         private IClamAVService _clamAVService;
         private IConfiguration _configuration;
-        private ILogger _logger;
 
-        public FileHandlerService(IClamAVService clamAVService, IConfiguration configuration, ILogger logger) 
+        public FileHandlerService(IClamAVService clamAVService, IConfiguration configuration) 
         {
             _clamAVService = clamAVService;
             _configuration = configuration;
-            _logger = logger;
         }
 
         public async Task<string> SaveFile(IFormFile file)
         {
-            _logger.LogInformation("TEST IF IT EVEN REACHES HERE");
             ValidateFile(file, new string[] { ".wav", ".mp3" });
 
             Guid guid = Guid.NewGuid();
