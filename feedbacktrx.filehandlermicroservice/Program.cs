@@ -1,4 +1,5 @@
 using feedbacktrx.filehandlermicroservice.Exceptions;
+using feedbacktrx.filehandlermicroservice.RabbitMQ;
 using feedbacktrx.filehandlermicroservice.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,17 @@ builder.Services.AddControllers();
 // Inject Services
 builder.Services.AddSingleton<IClamAVService>(_ => new ClamAVService(builder.Configuration["ClamAVConfig:Host"], int.Parse(builder.Configuration["ClamAVConfig:Port"])));
 builder.Services.AddScoped<IFileHandlerService, FileHandlerService>();
+
+builder.Services.AddSingleton(sp =>
+{
+    var hostname = builder.Configuration["RabbitMQ:Uri"];
+    var username = builder.Configuration["RabbitMQ:UserName"];
+    var password = builder.Configuration["RabbitMQ:Password"];
+    return new RabbitMQConnection(hostname, username, password);
+});
+
+// Register the RabbitMQBackgroundService as a hosted service
+builder.Services.AddHostedService<RabbitMQConsumer>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

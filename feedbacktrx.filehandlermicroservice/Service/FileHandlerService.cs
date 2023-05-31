@@ -76,6 +76,19 @@ namespace feedbacktrx.filehandlermicroservice.Service
             return result;
         }
 
+        public async Task<bool> DeleteFileFromBlobStorage(string fileName)
+        {
+            string connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+            string containerName = _configuration["AzureBlobStorage:ContainerName"];
+
+            BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+            BlobClient blobClient = containerClient.GetBlobClient(fileName);
+
+            return await blobClient.DeleteIfExistsAsync();
+        }
+
         public string GetMimeType(string fileName)
         {
             var fileExtension = Path.GetExtension(fileName);

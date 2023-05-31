@@ -6,6 +6,7 @@ namespace feedbacktrx.filehandlermicroservice.Service
     {
         public Task<string> SaveFile(IFormFile file);
         public Task<FileStreamResult> GetFileStream(string fileName);
+        public Task<bool> DeleteFileFromBlobStorage(string fileName);
         public string GetMimeType(string fileName);
     }
 }
