@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using feedbacktrx.filehandlermicroservice.Service;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -6,96 +7,83 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using feedbacktrx.filehandlermicroservice.Service;
 
-namespace feedbacktrx.filehandlermicroservice.RabbitMQ
+public class RabbitMQConsumer : BackgroundService
 {
-    public class RabbitMQConsumer : BackgroundService
+    private readonly IConnection _connection;
+    private readonly IModel _channel;
+    private readonly string _exchangeName;
+    private readonly string _queueName;
+    private readonly string _routingKey;
+    private readonly IServiceProvider _serviceProvider;
+
+    public RabbitMQConsumer(string rabbitMQConnectionString, string exchangeName, string queueName, string routingKey, string username, string password, IServiceProvider serviceProvider)
     {
-        private readonly RabbitMQConnection _rabbitMQConfig;
-        private readonly IServiceProvider _serviceProvider;
+        Uri uri = new Uri(rabbitMQConnectionString);
 
-        public RabbitMQConsumer(RabbitMQConnection rabbitMQConfig, IServiceProvider serviceProvider)
+        var factory = new ConnectionFactory
         {
-            _rabbitMQConfig = rabbitMQConfig;
-            _serviceProvider = serviceProvider;
-        }
+            HostName = uri.Host,
+            Port = uri.Port,
+            UserName = username,
+            Password = password,
+        };
+        _connection = factory.CreateConnection();
+        _channel = _connection.CreateModel();
+        _exchangeName = exchangeName;
+        _queueName = queueName;
+        _routingKey = routingKey;
+        _serviceProvider = serviceProvider;
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        _channel.ExchangeDeclare(_exchangeName, ExchangeType.Direct);
+        _channel.QueueDeclare(_queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+        _channel.QueueBind(_queueName, _exchangeName, _queueName, null);
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var consumer = new EventingBasicConsumer(_channel);
+        consumer.Received += async (model, eventArgs) =>
         {
-            Uri uri = new Uri(_rabbitMQConfig.Hostname);
+            var body = eventArgs.Body.ToArray();
+            var message = Encoding.UTF8.GetString(body);
 
-            var factory = new ConnectionFactory
-            {
-                HostName = uri.Host,
-                Port = uri.Port,
-                UserName = _rabbitMQConfig.Username,
-                Password = _rabbitMQConfig.Password
-            };
+            // Process the message and retrieve the username based on the userID
+            var username = await ProcessMessage(message);
 
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
-            {
-                channel.QueueDeclare(queue: "deleteposts",
-                                     durable: false,
-                                     exclusive: false,
-                                     autoDelete: false,
-                                     arguments: null);
+            var properties = _channel.CreateBasicProperties();
+            properties.CorrelationId = eventArgs.BasicProperties.CorrelationId;
+            var replyBody = Encoding.UTF8.GetBytes(username);
+            _channel.BasicPublish(_exchangeName, eventArgs.BasicProperties.ReplyTo, properties, replyBody);
+        };
 
-                var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += async (model, ea) =>
-                {
-                    var body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
+        _channel.BasicConsume(_queueName, true, consumer);
 
-                    Console.WriteLine("Received message: " + message);
+        await Task.CompletedTask;
+    }
 
-                    // Process the message and retrieve the username from the database
-                    string response = await ProcessMessage(ea, message);
-
-                    // Respond with the username
-                    Respond(channel, ea.BasicProperties.ReplyTo, ea.BasicProperties.CorrelationId, response);
-                };
-
-                channel.BasicConsume(queue: "deleteposts",
-                                      autoAck: true,
-                                      consumer: consumer);
-
-                Console.WriteLine("Listening for messages...");
-
-                // Wait for the cancellation token to be triggered (e.g., when the application shuts down)
-                await Task.Delay(Timeout.Infinite, stoppingToken);
-            }
-        }
-
-        private async Task<string> ProcessMessage(BasicDeliverEventArgs ea, string message)
+    private async Task<string> ProcessMessage(string message)
+    {
+        using (var scope = _serviceProvider.CreateScope())
         {
-            using (var scope = _serviceProvider.CreateScope())
-            {
-                var fileHandlerService = scope.ServiceProvider.GetRequiredService<IFileHandlerService>();
+            var fileHandlerService = scope.ServiceProvider.GetRequiredService<IFileHandlerService>();
 
-                var result = await DeleteFileFromBlobStorage(fileHandlerService, message);
-                return result;
-            }
+            var result = await DeleteFileFromBlobStorage(fileHandlerService, message);
+            return result;
         }
+    }
 
-        private async Task<string> DeleteFileFromBlobStorage(IFileHandlerService fileHandlerService, string message)
-        {
-            bool result = await fileHandlerService.DeleteFileFromBlobStorage(message);
-            return result.ToString();
-        }
+    private async Task<string> DeleteFileFromBlobStorage(IFileHandlerService fileHandlerService, string message)
+    {
+        bool result = await fileHandlerService.DeleteFileFromBlobStorage(message);
+        return result.ToString();
+    }
 
-        private void Respond(IModel channel, string replyTo, string correlationId, string username)
-        {
-            var responseProperties = channel.CreateBasicProperties();
-            responseProperties.CorrelationId = correlationId;
+    public override void Dispose()
+    {
+        _channel.Close();
+        _connection.Close();
 
-            var responseMessage = Encoding.UTF8.GetBytes(username);
-
-            channel.BasicPublish(exchange: "",
-                                  routingKey: replyTo,
-                                  basicProperties: responseProperties,
-                                  body: responseMessage);
-        }
+        base.Dispose();
     }
 }
