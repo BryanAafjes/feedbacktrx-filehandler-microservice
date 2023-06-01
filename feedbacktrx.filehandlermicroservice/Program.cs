@@ -20,7 +20,19 @@ builder.Services.AddHostedService(provider =>
     var queueName = "post_file_queue";
     var routingKey = "filehandler_queue";
 
-    return new RabbitMQConsumer(rabbitMQConnectionString, exchangeName, queueName, routingKey, username, password, provider);
+    return new RabbitMQFileDeleteConsumer(rabbitMQConnectionString, exchangeName, queueName, routingKey, username, password, provider);
+});
+
+builder.Services.AddHostedService(provider =>
+{
+    var rabbitMQConnectionString = builder.Configuration["RabbitMQ:Uri"];
+    var username = builder.Configuration["RabbitMQ:UserName"];
+    var password = builder.Configuration["RabbitMQ:Password"];
+    var exchangeName = "fileexists";
+    var queueName = "post_file_exist_queue";
+    var routingKey = "filehandler_exist_queue";
+
+    return new RabbitMQFileExistConsumer(rabbitMQConnectionString, exchangeName, queueName, routingKey, username, password, provider);
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

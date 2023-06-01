@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-public class RabbitMQConsumer : BackgroundService
+public class RabbitMQFileDeleteConsumer : BackgroundService
 {
     private readonly IConnection _connection;
     private readonly IModel _channel;
@@ -17,7 +17,7 @@ public class RabbitMQConsumer : BackgroundService
     private readonly string _routingKey;
     private readonly IServiceProvider _serviceProvider;
 
-    public RabbitMQConsumer(string rabbitMQConnectionString, string exchangeName, string queueName, string routingKey, string username, string password, IServiceProvider serviceProvider)
+    public RabbitMQFileDeleteConsumer(string rabbitMQConnectionString, string exchangeName, string queueName, string routingKey, string username, string password, IServiceProvider serviceProvider)
     {
         Uri uri = new Uri(rabbitMQConnectionString);
 
