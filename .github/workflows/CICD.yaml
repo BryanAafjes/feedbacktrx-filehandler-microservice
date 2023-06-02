@@ -68,7 +68,7 @@ jobs:
       - name: Create secrets
         run: |
           kubectl delete secret fileservice-env-secret --ignore-not-found
-          kubectl create secret generic fileservice-env-secret --from-literal=ConnectionString=${{ secrets.BLOB_CONTAINER_CONNECTION_STRING }} --from-literal=ContainerName=${{ secrets.BLOB_CONTAINER_NAME }}
+          kubectl create secret generic fileservice-env-secret --from-literal=ConnectionString=${{ secrets.BLOB_CONTAINER_CONNECTION_STRING }} --from-literal=ContainerName=${{ secrets.BLOB_CONTAINER_NAME }} --from-literal=RabbitURI=${{ secrets.RABBIT_URI }} --from-literal=RabbitUsername=${{ secrets.RABBIT_USERNAME }} --from-literal=RabbitPassword=${{ secrets.RABBIT_PASSWORD }}
 
       - name: Deploy ClamAV
         run: kubectl apply -f feedbacktrx.filehandlermicroservice/kubernetes/clamav.yaml
