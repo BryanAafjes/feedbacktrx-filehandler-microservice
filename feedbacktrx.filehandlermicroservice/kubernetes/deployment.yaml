@@ -28,6 +28,21 @@ spec:
                 secretKeyRef:
                   name: fileservice-env-secret
                   key: ContainerName
+            - name: RabbitMQ__Uri
+              valueFrom:
+                secretKeyRef:
+                  name: fileservice-env-secret
+                  key: RabbitURI
+            - name: RabbitMQ__Username
+              valueFrom:
+                secretKeyRef:
+                  name: fileservice-env-secret
+                  key: RabbitUsername
+            - name: RabbitMQ__Password
+              valueFrom:
+                secretKeyRef:
+                  name: fileservice-env-secret
+                  key: RabbitPassword
 ---
 apiVersion: v1
 kind: Service

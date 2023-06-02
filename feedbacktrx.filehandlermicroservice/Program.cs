@@ -1,5 +1,4 @@
 using feedbacktrx.filehandlermicroservice.Exceptions;
-using feedbacktrx.filehandlermicroservice.RabbitMQ;
 using feedbacktrx.filehandlermicroservice.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,16 +10,30 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<IClamAVService>(_ => new ClamAVService(builder.Configuration["ClamAVConfig:Host"], int.Parse(builder.Configuration["ClamAVConfig:Port"])));
 builder.Services.AddScoped<IFileHandlerService, FileHandlerService>();
 
-builder.Services.AddSingleton(sp =>
+// Register the RabbitMQBackgroundService as a hosted service
+builder.Services.AddHostedService(provider =>
 {
-    var hostname = builder.Configuration["RabbitMQ:Uri"];
+    var rabbitMQConnectionString = builder.Configuration["RabbitMQ:Uri"];
     var username = builder.Configuration["RabbitMQ:UserName"];
     var password = builder.Configuration["RabbitMQ:Password"];
-    return new RabbitMQConnection(hostname, username, password);
+    var exchangeName = "postdeletes";
+    var queueName = "post_file_queue";
+    var routingKey = "filehandler_queue";
+
+    return new RabbitMQFileDeleteConsumer(rabbitMQConnectionString, exchangeName, queueName, routingKey, username, password, provider);
 });
 
-// Register the RabbitMQBackgroundService as a hosted service
-builder.Services.AddHostedService<RabbitMQConsumer>();
+builder.Services.AddHostedService(provider =>
+{
+    var rabbitMQConnectionString = builder.Configuration["RabbitMQ:Uri"];
+    var username = builder.Configuration["RabbitMQ:UserName"];
+    var password = builder.Configuration["RabbitMQ:Password"];
+    var exchangeName = "fileexists";
+    var queueName = "post_file_exist_queue";
+    var routingKey = "filehandler_exist_queue";
+
+    return new RabbitMQFileExistConsumer(rabbitMQConnectionString, exchangeName, queueName, routingKey, username, password, provider);
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
