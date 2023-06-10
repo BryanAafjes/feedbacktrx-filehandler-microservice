@@ -1,4 +1,5 @@
-﻿using feedbacktrx.filehandlermicroservice.Service;
+﻿using Azure;
+using feedbacktrx.filehandlermicroservice.Service;
 using Microsoft.AspNetCore.Mvc;
 
 namespace feedbacktrx.filehandlermicroservice.Controllers
@@ -29,6 +30,19 @@ namespace feedbacktrx.filehandlermicroservice.Controllers
             HttpContext.Response.Headers.Add("Accept-Ranges", "bytes");
 
             return await _service.GetFileStream(fileName);
+        }
+
+        [HttpGet("/exists/{fileName}")]
+        public async Task<IActionResult> CheckIfFileExists(string fileName)
+        {
+            bool exists = await _service.CheckIfFileExists(fileName);
+
+            if(exists)
+            {
+                return StatusCode(StatusCodes.Status200OK);
+            }
+
+            return StatusCode(StatusCodes.Status404NotFound);
         }
     }
 }
